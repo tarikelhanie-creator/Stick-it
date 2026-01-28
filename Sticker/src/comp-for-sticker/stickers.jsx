@@ -3,6 +3,9 @@ import Sticker from "./sticker";
 import Trash from "./Trash";
 import { Plus } from "lucide-react";
 import { Trash2, X } from 'lucide-react';
+import ba from '../assets/sticker-bg.jpg';
+import { useTheme } from "../ThemeContext";
+import useThemeColors from "../useThemeColore";
 
 export default function Stickers() {
   const [stickers, setStickers] = useState([]);
@@ -12,6 +15,9 @@ export default function Stickers() {
   const [addingSticker, setAddingSticker] = useState(false);
   const [title, setTitle] = useState("");
   const [desc, setDesc] = useState("");
+  const { isDark, toggleTheme } = useTheme();
+  const { backgroundclr, darkbackgroundclr } = useThemeColors();
+
   
     useEffect(() => {
       const timer = setTimeout(() => setShowWelcome(false), 2000);
@@ -58,19 +64,16 @@ export default function Stickers() {
     <>
       {/* Welcome Overlay */}
       {showWelcome && (
-        <div className="
-          fixed inset-0 z-50
-          flex items-center justify-center
-          bg-white
-          animate-fadeOut
-        ">
+        <div className={
+          isDark ? 'fixed inset-0 z-50 flex items-center justify-center bg-black animate-fadeOut':'fixed inset-0 z-50 flex items-center justify-center bg-white animate-fadeOut'
+        }>
           <h1 className="
-            text-7xl font-black
-            bg-gradient-to-r from-blue-600 to-purple-600
+            text-2xl font-black
+            bg-gradient-to-r from-gray-600 to-gray-500
             text-transparent bg-clip-text
             animate-pop
           ">
-            📓 Stickers!!
+            Loading...
           </h1>
         </div>
       )}
@@ -78,7 +81,7 @@ export default function Stickers() {
         <div className="
           fixed inset-0 z-50
           flex items-center justify-center
-          bg-black bg-opacity-50
+          bg-transparent backdrop-blur-sm
           ">
             <div className="
              bg-white rounded-2xl 
@@ -86,7 +89,6 @@ export default function Stickers() {
             max-h-[80vh]
             overflow-hidden
             shadow-2xl
-            animate-popUp
             ">
               <div className="
               flex items-center justify-between
@@ -130,23 +132,46 @@ export default function Stickers() {
          </div>)}
 
         {addingSticker && (
-          <div
-            className="
-            fixed inset-0 z-50
-            flex items-center justify-center
-            bg-black bg-opacity-50
-          ">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-transparent backdrop-blur-sm">
             <div className="
-               bg-white rounded-2xl 
-                w-full max-w-2xl 
-                max-h-[80vh]
-                overflow-hidden
-                shadow-2xl
-                animate-popUp
+              bg-white rounded-2xl 
+              w-full max-w-md 
+              h-full max-h-md
+              p-6
+              
              ">
-                <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} />
-              <textarea value={desc} onChange={(e) => setDesc(e.target.value)} />
-              <input type="button" onClick={() => {addSticker(); setAddingSticker(false);}} value="Add Sticker" />
+              <div className=" text-neutral-50 min-h-full flex justify-center items-center rounded-lg border border-opacity-5"
+                style={
+                  isDark ? {backgroundColor:darkbackgroundclr} : {backgroundColor:backgroundclr}
+                }>
+                <div className="flex flex-col h-full justify-center items-center gap-4">
+                  <div className="flex flex-col">
+                      <input
+                        type="text"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        className=" border-4 rounded-2xl p-4 border-white h-7 mb-4 text-white font-bold outline-none focus:bg-amber-50 font-chalk focus:text-black transition-all duration-200"
+                      />
+                    <textarea
+                      value={desc}
+                      onChange={(e) => setDesc(e.target.value)}
+                      className="bg-transparent border-4 rounded-2xl p-2 border-white text-white outline-none focus:bg-amber-50 focus:text-black transition-all duration-200 mb-4 w-70 h-35"
+                    />
+                  </div>
+                  <button
+                  onClick={() => {
+                    addSticker();
+                    setAddingSticker(false);
+                    setTitle("");
+                    setDesc("");
+                  }}
+                  className={"relative py-2 px-8 text-black text-base font-bold nded-full overflow-hidden bg-white rounded-full transition-all duration-400 ease-in-out shadow-md hover:scale-105 hover:text-white hover:shadow-lg active:scale-90 before:absolute before:top-0 before:-left-full before:w-full before:h-full before:bg-gradient-to-r before:transition-all before:duration-500 before:ease-in-out before:z-[-1] before:rounded-full hover:before:left-0 " + (isDark ? "before:from-gray-700 before:to-gray-900" : "before:from-yellow-400 before:to-red-500")}
+                >
+                  ADD STICKER!
+                </button>
+
+                </div>
+             </div>
              </div>
 
             
@@ -159,10 +184,10 @@ export default function Stickers() {
       bg-blue-500 
       text-white
       grid place-items-center
-      hover:w-14 hover:h-14 active:w-10 active:h-10
+      hover:w-14 hover:h-14 active:w-12 active:h-12
       transition-all duration-200
       fixed bottom-8 right-8
-      shadow-lg shadow-blue-300/50
+      shadow-lg 
       ">
         <Plus className="w-10 h-10" />
       </button>
@@ -174,7 +199,7 @@ export default function Stickers() {
           bg-red-500 text-white
           flex items-center justify-center
           shadow-xl hover:shadow-2xl
-          hover:w-14 hover:h-14 active:w-10 active:h-10
+          hover:w-14 hover:h-14 active:w-12 active:h-12
           transition-all
           z-40
         "
@@ -184,16 +209,32 @@ export default function Stickers() {
 
 
 
-      <h2>📝 Notes</h2>
-      <div style={{ display: "flex", gap: 10 }}>
-        {stickers.map((s) => (
-          <Sticker
-            key={s.id}
-            sticker={s}
-            onDelete={() => moveToTrash(s.id)}
-          />
-        ))}
+      <div className="w-257 h-110  m-2 overflow-y-scroll border-5 pt-2 scrollbar-none" style={{
+        backgroundColor: isDark ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.6)',
+        borderRadius: '15px',
+        border: isDark ? '4px solid white' : '4px solid black',
+        backdropFilter: 'blur(10px)',
+
+      }}>
+        <div style={{
+            display: "flex", 
+            gap: 10, 
+            flexWrap: "wrap", 
+            padding: '10px', 
+            borderRadius: '10px',
+            paddingTop: '20px'
+          }}>
+            {stickers.map((s) => (
+              <Sticker
+                key={s.id}
+                sticker={s}
+                onDelete={() => moveToTrash(s.id)}
+              />
+            ))}
+        </div>
       </div>
+      
+      
     </>
   );
 }

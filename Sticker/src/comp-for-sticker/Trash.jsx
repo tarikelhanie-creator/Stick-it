@@ -9,7 +9,8 @@ export default function Trash({ trash, onRecover, onDeleteForever,onDeleteeveryt
       {trash.map((s) => (
         <div
           key={s.id}
-          style={{ background: "#ddd", padding: 10, width: 200 }}
+
+          style={{padding: 10, width: 200 }}
         >
           <h4>{s.title || "Untitled"}</h4>
           <p>{s.desc || "Empty note"}</p>

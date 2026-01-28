@@ -7,11 +7,15 @@ import Stickers from './comp-for-sticker/stickers'
 import { Router, Route, Link ,Routes } from 'react-router-dom'
 import Noter from './comp-for-notetaker/main_noter'
 import Nav from './navbar/Nav'
+import { ThemeProvider } from './ThemeContext'
+import { useTheme } from './ThemeContext'
+
 
 function App() {
 
+  const { isDark, toggleTheme } = useTheme();
   return (
-    <>
+    <ThemeProvider>
         <div>
           <Nav/>
         </div>
@@ -19,7 +23,7 @@ function App() {
           <Route path="/sticker-notes" element={<Stickers/>} />
           <Route path="/normal-notes" element={<Noter/>} />
         </Routes>
-    </>
+    </ThemeProvider>
   );
 
 }
