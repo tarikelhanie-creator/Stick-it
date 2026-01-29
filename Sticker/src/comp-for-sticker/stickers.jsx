@@ -6,6 +6,7 @@ import { Trash2, X } from 'lucide-react';
 import ba from '../assets/sticker-bg.jpg';
 import { useTheme } from "../ThemeContext";
 import useThemeColors from "../useThemeColore";
+import { useSidebar } from "../sidebarcontext";
 
 export default function Stickers() {
   const [stickers, setStickers] = useState([]);
@@ -17,38 +18,50 @@ export default function Stickers() {
   const [desc, setDesc] = useState("");
   const { isDark, toggleTheme } = useTheme();
   const { backgroundclr, darkbackgroundclr } = useThemeColors();
+  const { setStickers: setSidebarStickers } = useSidebar();
 
   
     useEffect(() => {
       const timer = setTimeout(() => setShowWelcome(false), 2000);
       return () => clearTimeout(timer);
     }, []);
+
+    useEffect(() => {
+      setSidebarStickers(stickers);
+    }, [stickers, setSidebarStickers]);
   
 
-  const addSticker = () => {
-    setStickers([
-      ...stickers,
-      {
-        id: Date.now(),
-        title,
-        desc,
-      },
-    ]);
-  };
+    const addSticker = () => {
+      const updatedStickers = [
+        ...stickers,
+        {
+          id: Date.now(),
+          category: "",
+          title,
+          desc,
+        },
+      ];
+      setStickers(updatedStickers);
+      setSidebarStickers(updatedStickers); // Sync to context
+    };
 
   // MOVE TO TRASH
-  const moveToTrash = (id) => {
-    const sticker = stickers.find((s) => s.id === id);
-    setStickers(stickers.filter((s) => s.id !== id));
-    setTrash([...trash, sticker]);
-  };
+    const moveToTrash = (id) => {
+      const sticker = stickers.find((s) => s.id === id);
+      const updatedStickers = stickers.filter((s) => s.id !== id);
+      setStickers(updatedStickers);
+      setSidebarStickers(updatedStickers); // Sync to context
+      setTrash([...trash, sticker]);
+    };
 
   // RECOVER
-  const recoverSticker = (id) => {
-    const sticker = trash.find((s) => s.id === id);
-    setTrash(trash.filter((s) => s.id !== id));
-    setStickers([...stickers, sticker]);
-  };
+    const recoverSticker = (id) => {
+      const sticker = trash.find((s) => s.id === id);
+      setTrash(trash.filter((s) => s.id !== id));
+      const updatedStickers = [...stickers, sticker];
+      setStickers(updatedStickers);
+      setSidebarStickers(updatedStickers); // Sync to context
+    };
 
   // DELETE FOREVER
   const deleteForever = (id) => {

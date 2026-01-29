@@ -2,6 +2,7 @@ import { Link, useLocation } from 'react-router-dom';  // Changed from 'react-ro
 import { StickyNote, FileText, Sparkles } from 'lucide-react';
 import { useTheme } from '../ThemeContext';
 import { useState,useEffect } from 'react';
+import { useSidebar } from '../sidebarcontext';
 
 export default function Navbar() {
   const location = useLocation();
@@ -9,6 +10,7 @@ export default function Navbar() {
   const [showthemedark, setShowthemedark] = useState(false);
   const [showthemelight, setShowthemelight] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
+  const { toggleSidebar } = useSidebar();
 
   // Effect 1: Handle dark mode transition
 useEffect(() => {
@@ -94,20 +96,22 @@ useEffect(() => {
       <div className="max-w-7xl mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
           {/* Logo/Brand */}
-          <Link 
-            to="/" 
-            className="flex items-center gap-2 group"
-          >
-            <div className="relative">
-              <Sparkles className={isDark ? "w-8 h-8 text-amber-50 text-primary animate-pulse":"w-8 h-8 text-primary animate-pulse"} />
-            </div>
-            <h1 
-              className={isDark ? "text-3xl font-bold text-white group-hover:text-amber-100 transition-colors duration-300":"text-3xl font-bold text-gray-800 group-hover:text-primary transition-colors duration-300"}
-              style={{ fontFamily: 'Baloo 2, cursive' }}
-            >
-              My Notes
-            </h1>
-          </Link>
+          <div className='flex'>
+                <div className="relative cursor-pointer mr-4 flex items-center" >
+                  <Sparkles className={isDark ? "w-8 h-8 text-amber-50 text-primary animate-pulse":"w-8 h-8 text-primary animate-pulse"} onClick={toggleSidebar} />
+                </div>
+              <Link 
+                to="/" 
+                className="flex items-center gap-2 group"
+              >
+                <h1 
+                  className={isDark ? "text-3xl font-bold text-white group-hover:text-amber-100 transition-colors duration-300":"text-3xl font-bold text-gray-800 group-hover:text-primary transition-colors duration-300"}
+                  style={{ fontFamily: 'Baloo 2, cursive' }}
+                >
+                  My Notes
+                </h1>
+              </Link>
+          </div>
           <button
             className={isDark ? "px-4 py-2 bg-gray-800 text-gray-200 rounded-full hover:bg-gray-700 transition-colors":"px-4 py-2 bg-gray-200 text-gray-800 rounded-full hover:bg-gray-300 transition-colors"}
            onClick={() => {

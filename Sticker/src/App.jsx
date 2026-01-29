@@ -9,6 +9,9 @@ import Noter from './comp-for-notetaker/main_noter'
 import Nav from './navbar/Nav'
 import { ThemeProvider } from './ThemeContext'
 import { useTheme } from './ThemeContext'
+import { SidebarProvider} from './sidebarcontext'
+import { useSidebar } from './sidebarcontext'
+import Sidebar from './sidebar/sidebar'
 
 
 function App() {
@@ -16,6 +19,8 @@ function App() {
   const { isDark, toggleTheme } = useTheme();
   return (
     <ThemeProvider>
+      <SidebarProvider>
+        <Sidebar />
         <div>
           <Nav/>
         </div>
@@ -23,6 +28,7 @@ function App() {
           <Route path="/sticker-notes" element={<Stickers/>} />
           <Route path="/normal-notes" element={<Noter/>} />
         </Routes>
+      </SidebarProvider>
     </ThemeProvider>
   );
 

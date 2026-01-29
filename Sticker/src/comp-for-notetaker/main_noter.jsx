@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTheme } from "../ThemeContext";
+import { useSidebar } from "../sidebarcontext";
 
 export default function Noter() {
   const [notes, setNotes] = useState([]);
@@ -10,6 +11,7 @@ export default function Noter() {
   });
   const [showWelcome, setShowWelcome] = useState(true);
   const { isDark, toggleTheme } = useTheme();
+  const { setNotes: setSidebarNotes, toggleSidebar } = useSidebar(); // Update this line
   
 
   useEffect(() => {
@@ -17,11 +19,18 @@ export default function Noter() {
     return () => clearTimeout(timer);
   }, []);
 
+  useEffect(() => {
+    setSidebarNotes(notes);
+  }, [notes, setSidebarNotes]);
+
   const addNote = () => {
     if (note.content.trim() === "") return;
-    setNotes([...notes, note]);
+    const updatedNotes = [...notes, note];
+    setNotes(updatedNotes); // Update local state
+    setSidebarNotes(updatedNotes); // Sync to context
     setNote({
       id: Date.now(),
+      category: "",
       title: "",
       content: ""
     });
@@ -47,7 +56,7 @@ export default function Noter() {
 
       <div className="flex flex-col h-screen w-full max-w-7xl mx-auto px-6 py-8">
         
-        <div className={isDark ? "flex-grow flex flex-col bg-blue-900 p-6 rounded-lg shadow-md overflow-y-auto":"flex-grow flex flex-col bg-blue-50 p-6 rounded-lg shadow-md overflow-y-auto"}>
+        <div className={'border-4 ' + (isDark ? "flex-grow flex flex-col bg-blue-900 border-blue-700  p-6 rounded-lg shadow-md overflow-y-auto":"flex-grow flex flex-col bg-blue-50 border-blue-300 p-6 rounded-lg shadow-md overflow-y-auto")}>
           <input 
             type="text" 
             value={note.title}
@@ -77,6 +86,7 @@ export default function Noter() {
           </button>
         </div>
       </div>
+
     </>
   );
 }
