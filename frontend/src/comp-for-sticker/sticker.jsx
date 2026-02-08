@@ -4,38 +4,63 @@ import { Trash2 } from 'lucide-react';
 import useThemeColors from "../useThemeColore";
 
 export default function Sticker({ sticker, onDelete }) {
-
-
-
   const [title, setTitle] = useState(sticker?.title || "");
-  const [desc, setDesc] = useState(sticker?.desc || "");
+  const [desc, setDesc] = useState(sticker?.content || "");
   const [isEditing, setIsEditing] = useState(false);
-  const { isDark, toggleTheme } = useTheme();
+  const { isDark } = useTheme();
   const { backgroundclr, darkbackgroundclr } = useThemeColors();
 
-
   return (
-    <>
     <div
-      class={"relative rounded-lg -skew-x-6 -translate-y-2 -translate-y-6 hover:-translate-y-1 hover:-translate-x-0 hover:skew-x-0 duration-500 w-52 h-24 p-2  card-compact hover:bg-base-200 transition-all duration-200 [box-shadow:12px_12px] hover:[box-shadow:4px_4px] mb-6 mx-4 cursor-pointer " + (isDark ? "bg-neutral-600" : "bg-neutral-50")}
+      className={`
+        border-4 border-solid border-white rounded-2xl
+        relative w-52 h-52 p-4
+        rounded-lg shadow-lg
+        transition-all duration-300
+        hover:scale-105 hover:rotate-2 hover:shadow-xl
+        cursor-pointer
+        ${isDark ? 'bg-gray-800 border border-gray-700' : 'bg-yellow-100 border border-yellow-300'}
+      `}
+      style={isDark ? {backgroundColor: darkbackgroundclr} : {backgroundColor: backgroundclr}}
     >
-      <figure class="w-full h-full">
-        <div
-          alt="change to a img tag"
-          class=" text-neutral-50 min-h-full rounded-lg border border-opacity-5"
-          style={
-            isDark ? {backgroundColor:darkbackgroundclr} : {backgroundColor:backgroundclr}
-          }
-        ></div>
-      </figure>
-      <div class={isDark ? "absolute text-neutral-50 bottom-4 left-0 px-4 pt-5 flex-row justify-between w-full flex" : "absolute text-black bottom-4 left-0 px-4 pt-5 flex-row justify-between w-full flex"}>
-        <div className="flex">
-          <span class="font-bold">{title || "Untitled"}</span>
-          <Trash2 className="ml-2 cursor-pointer" onClick={onDelete} />
-        </div>
+      {/* Content */}
+      <div className="flex flex-col h-full">
+        <h3 className={`font-bold text-lg mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+          {title || "Untitled"}
+        </h3>
+        <p className={`flex-grow text-sm overflow-hidden ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+          {desc?.substring(0, 100) || "No description"}
+          {desc?.length > 100 && "..."}
+        </p>
+        
+        {/* Delete Button */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete();
+          }}
+          className={`
+            self-end mt-2 p-2 rounded-full
+            transition-all duration-200
+            hover:scale-110
+            ${isDark 
+              ? 'bg-red-900/50 text-red-400 hover:bg-red-800' 
+              : 'bg-red-100 text-red-600 hover:bg-red-200'
+            }
+          `}
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
       </div>
-    </div>
 
-    </>
+      {/* Sticky note "tape" effect */}
+      <div 
+        className={`
+          absolute -top-2 left-1/2 -translate-x-1/2
+          w-16 h-4 rounded-sm
+          ${isDark ? 'bg-gray-700/50' : 'bg-yellow-300/50'}
+        `}
+      />
+    </div>
   );
 }

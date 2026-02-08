@@ -232,7 +232,7 @@ export default function Navbar() {
                     {/* Logout */}
                     <div className={`p-2 border-t ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
                       <button 
-                        onClick={handleLogout}
+                        onClick={() => {handleLogout(); setIsProfileOpen(false);}}
                         className={`
                           w-full text-left px-4 py-3 rounded-lg transition-colors
                           ${isDark 

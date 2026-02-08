@@ -1,39 +1,62 @@
 import { useState, useEffect } from "react";
 import { useTheme } from "../ThemeContext";
-import { useSidebar } from "../sidebarcontext";
+import { Plus } from "lucide-react";
+import { useAuth } from "../AuthContex";
 
 export default function Noter() {
   const [notes, setNotes] = useState([]);
+  const { token } = useAuth();
   const [note, setNote] = useState({
-    id: Date.now(),
     title: "",
-    content: ""
+    content: "",  // ← Changed from description
+    category: "General"  // ← Changed from "porn"
   });
   const [showWelcome, setShowWelcome] = useState(true);
-  const { isDark, toggleTheme } = useTheme();
-  const { setNotes: setSidebarNotes, toggleSidebar } = useSidebar(); // Update this line
-  
+  const { isDark } = useTheme();
+
+  useEffect(() => {
+    if (!token) return;
+    
+    const fetchNotes = async () => {
+      try {
+        const res = await fetch('http://localhost:5000/api/notes', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        const data = await res.json();
+        setNotes(data);
+      } catch (err) {
+        console.error('Error:', err);
+      }
+    };
+    
+    fetchNotes();
+  }, [token]);
 
   useEffect(() => {
     const timer = setTimeout(() => setShowWelcome(false), 2000);
     return () => clearTimeout(timer);
   }, []);
 
-  useEffect(() => {
-    setSidebarNotes(notes);
-  }, [notes, setSidebarNotes]);
-
-  const addNote = () => {
-    if (note.content.trim() === "") return;
-    const updatedNotes = [...notes, note];
-    setNotes(updatedNotes); // Update local state
-    setSidebarNotes(updatedNotes); // Sync to context
-    setNote({
-      id: Date.now(),
-      category: "",
-      title: "",
-      content: ""
-    });
+  const addNote = async () => {
+    try {
+      const res = await fetch('http://localhost:5000/api/notes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(note)
+      });
+      const data = await res.json();
+      setNotes([...notes, data]);
+      setNote({ title: "", content: "", category: "General" });
+    } catch(err) {
+      console.error('Error:', err);
+    }
   };
 
   return (
@@ -41,7 +64,9 @@ export default function Noter() {
       {/* Welcome Overlay */}
       {showWelcome && (
         <div className={
-          isDark ? 'fixed inset-0 z-50 flex items-center justify-center bg-black animate-fadeOut':'fixed inset-0 z-50 flex items-center justify-center bg-white animate-fadeOut'
+          isDark 
+            ? 'fixed inset-0 z-50 flex items-center justify-center bg-black animate-fadeOut'
+            : 'fixed inset-0 z-50 flex items-center justify-center bg-white animate-fadeOut'
         }>
           <h1 className="
             text-2xl font-black
@@ -54,39 +79,73 @@ export default function Noter() {
         </div>
       )}
 
-      <div className="flex flex-col h-screen w-full max-w-7xl mx-auto px-6 py-8">
+      <div className="flex flex-col h-screen w-full max-w-4xl mx-auto px-8 py-12">
         
-        <div className={'border-4 ' + (isDark ? "flex-grow flex flex-col bg-blue-900 border-blue-700  p-6 rounded-lg shadow-md overflow-y-auto":"flex-grow flex flex-col bg-blue-50 border-blue-300 p-6 rounded-lg shadow-md overflow-y-auto")}>
+        <div className={`
+          flex-grow flex flex-col
+          rounded-lg transition-all duration-300
+          ${isDark 
+            ? 'bg-[#191919]' 
+            : 'bg-white shadow-sm border border-gray-200'
+          }
+        `}>
+          {/* Title Input */}
           <input 
             type="text" 
             value={note.title}
             onChange={e => setNote({...note, title: e.target.value})}
-            placeholder="Note Title" 
-            className={isDark ? "w-full p-3 mb-4 text-3xl text-amber-50  font-bold border-0 border-b-2 border-blue-700 focus:outline-none focus:border-none placeholder-gray-400" : "w-full p-3 mb-4 text-3xl font-bold border-0 border-b-2 border-gray-200 focus:outline-none placeholder-gray-400" 
-            }
+            placeholder="Untitled" 
+            className={`
+              w-full px-16 pt-16 pb-2
+              text-4xl font-bold
+              bg-transparent
+              border-0 focus:outline-none
+              placeholder:text-gray-400/40
+              ${isDark ? 'text-white' : 'text-gray-900'}
+            `}
+            style={{ fontFamily: 'ui-sans-serif, system-ui, sans-serif' }}
           />
           
+          {/* Content Textarea */}
           <textarea
-            className={isDark ? "flex-grow w-full p-3 mt-4 text-lg bg-transparent resize-none focus:outline-none placeholder-gray-400":"flex-grow w-full p-3 mt-4 text-lg bg-transparent resize-none focus:outline-none placeholder-gray-600"}
+            className={`
+              flex-grow w-full
+              scrollbar-none
+              px-16 pt-4 pb-16
+              text-base leading-relaxed
+              bg-transparent resize-none
+              border-0 focus:outline-none
+              placeholder:text-gray-400/60
+              ${isDark ? 'text-gray-300' : 'text-gray-700'}
+            `}
             value={note.content}
             onChange={e => setNote({...note, content: e.target.value})}
-            placeholder="What's on your mind?"
+            placeholder="Start writing..."
+            style={{ fontFamily: 'ui-sans-serif, system-ui, sans-serif' }}
           />
           
-          <button 
-            onClick={addNote}
-            className="
-              mt-6 px-6 py-3
-              bg-blue-500 text-white font-bold
-              rounded-lg hover:bg-blue-600
-              transition-colors self-end
-            "
-          >
-            + Add Note
-          </button>
+          {/* Add Note Button */}
+          <div className="px-16 pb-8">
+            <button 
+              onClick={addNote}
+              className={`
+                inline-flex items-center gap-2
+                px-4 py-2
+                text-sm font-medium
+                rounded-md
+                transition-all duration-200
+                ${isDark 
+                  ? 'bg-white/10 text-white hover:bg-white/15' 
+                  : 'bg-gray-900 text-white hover:bg-gray-800'
+                }
+              `}
+            >
+              <Plus className="w-4 h-4" />
+              Add Note
+            </button>
+          </div>
         </div>
       </div>
-
     </>
   );
 }

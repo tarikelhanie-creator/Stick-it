@@ -3,6 +3,10 @@ const cors = require('cors');
 const mongoose = require('mongoose')
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const User = require('./models/User');
+const authenticateToken = require('./middleware/auth');
+const Note = require('./models/Notes');
+const Sticker = require('./models/Stickers');
 const app = express();
 const port =5000;
 
@@ -13,18 +17,8 @@ mongoose.connect('mongodb://localhost:27017/Stick-it')
     .then(() => console.log("Connected to MongoDB"))
     .catch(err => console.log("Failed to connect to MongoDB:", err));
 
-const userSchema = new mongoose.Schema({
-    username: {type: String, required: true},
-    email: {type: String, required: true ,unique: true},
-    age: {type: Number, required: true},
-    password: {type: String, required: true}
-});
 
-const User = mongoose.model('User', userSchema)
 
-app.get("/api/hello", (req,res) =>{
-    res.json({message: "hello twin"})
-})
 
 app.get('/api/users', async (req,res)=>{
     try{
@@ -163,6 +157,90 @@ app.post('/api/users/login', async (req,res)=>{
         res.status(500).json({error: 'Failed to login'})
     }
 })
+
+// Protected route - only logged-in users can create notes
+app.post('/api/notes', authenticateToken, async (req, res) => {
+    try {
+        const newNote = new Note({
+            title: req.body.title,
+            description: req.body.description, 
+            author_id: req.user.id,
+            category: req.body.category,
+        });
+        
+        const savedNote = await newNote.save();
+        res.json(savedNote);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to create note' });
+    }
+});
+
+
+app.get('/api/notes', authenticateToken, async (req, res) => {
+    try {
+        const notes = await Note.find({ author_id: req.user.id });
+        res.json(notes);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch notes' });
+    }
+});
+
+app.delete('/api/notes/:id', authenticateToken, async (req, res) => {
+    try {
+        const deletedNote = await Note.findOneAndDelete({ _id: req.params.id, author_id: req.user.id });
+        if (!deletedNote) {
+            return res.status(404).json({ error: 'Note not found or unauthorized' });
+        }
+        res.json({ message: 'Note deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to delete note' });
+    }
+});
+
+app.get('/api/stickers', authenticateToken, async (req, res) => {
+    try {
+        const stickers = await Sticker.find({ author_id: new mongoose.Types.ObjectId(req.user.id) });
+        res.json(stickers);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch stickers' });
+    }
+});
+
+app.post('/api/stickers', authenticateToken, async (req, res) => {
+    console.log('POST /api/stickers - body:', req.body);
+    
+    try {
+        // Don't convert note_id/author_id - use as-is or make optional
+        const newSticker = new Sticker({
+            title: req.body.title || "Untitled",           // ✅ Fix empty
+            content: req.body.content || "No content",     // ✅ Fix empty  
+            note_id: req.body.note_id ? new mongoose.Types.ObjectId() : null,  // ✅ Fake valid ID
+            author_id: new mongoose.Types.ObjectId(req.user.id)    // ✅ Convert token ID
+        });
+        
+        const savedSticker = await newSticker.save();
+        res.json(savedSticker);
+    } catch (error) {
+        console.log('SAVE ERROR:', error);
+        res.status(500).json({ error: 'Failed to create sticker' });
+    }
+});
+
+
+
+app.delete('/api/stickers/:id', authenticateToken, async (req, res) => {
+    try {
+        const deletedSticker = await Sticker.findOneAndDelete({ _id: req.params.id, author_id: req.user.id });
+
+        if (!deletedSticker) {
+            return res.status(404).json({ error: 'Sticker not found or unauthorized' });
+        }
+
+        res.json({ message: 'Sticker deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to delete sticker' });
+    }
+});
 
 app.listen(port, () =>{
     console.log(`Server is running on port ${port}`);
