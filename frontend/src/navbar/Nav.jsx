@@ -2,7 +2,6 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { StickyNote, FileText, Sparkles, Menu, X, User, Settings, LogOut } from 'lucide-react';
 import { useTheme } from '../ThemeContext';
 import { useState, useEffect } from 'react';
-import { useSidebar } from '../sidebarcontext';
 import { useAuth } from '../AuthContex.jsx';
 
 export default function Navbar() {
@@ -12,7 +11,6 @@ export default function Navbar() {
   const [showthemedark, setShowthemedark] = useState(false);
   const [showthemelight, setShowthemelight] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
-  const { toggleSidebar } = useSidebar();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, logout } = useAuth();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -115,13 +113,12 @@ export default function Navbar() {
           <div className="flex items-center justify-between">
             {/* Logo/Brand */}
             <div className='flex items-center'>
-              <div className="relative cursor-pointer mr-4 flex items-center group">
+              <div className="relative  mr-4 flex items-center group">
                 <Sparkles 
                   className={isDark 
-                    ? "w-8 h-8 text-amber-400 animate-pulse hover:text-amber-300 transition-colors" 
-                    : "w-8 h-8 text-orange-500 animate-pulse hover:text-orange-600 transition-colors"
+                    ? "w-8 h-8 text-amber-400 animate-pulse hover:text-amber-300 transition-colors active:text-amber-300" 
+                    : "w-8 h-8 text-orange-500 animate-pulse hover:text-orange-600 transition-colors active:text-orange-600"
                   } 
-                  onClick={toggleSidebar} 
                 />
               </div>
               <Link 
@@ -187,48 +184,6 @@ export default function Navbar() {
                         </div>
                       </div>
                     </div>
-
-                    {/* Profile Actions */}
-                    <div className="p-2">
-                      <button 
-                        className={`
-                          w-full text-left px-4 py-3 rounded-lg transition-colors
-                          ${isDark 
-                            ? 'hover:bg-gray-700 text-gray-200' 
-                            : 'hover:bg-gray-100 text-gray-700'
-                          }
-                        `}
-                        onClick={() => {
-                          setIsProfileOpen(false);
-                          navigate('/profile');
-                        }}
-                      >
-                        <div className="flex items-center gap-3">
-                          <User className="w-4 h-4" />
-                          <span className="font-medium">My Profile</span>
-                        </div>
-                      </button>
-                      
-                      <button 
-                        className={`
-                          w-full text-left px-4 py-3 rounded-lg transition-colors
-                          ${isDark 
-                            ? 'hover:bg-gray-700 text-gray-200' 
-                            : 'hover:bg-gray-100 text-gray-700'
-                          }
-                        `}
-                        onClick={() => {
-                          setIsProfileOpen(false);
-                          navigate('/settings');
-                        }}
-                      >
-                        <div className="flex items-center gap-3">
-                          <Settings className="w-4 h-4" />
-                          <span className="font-medium">Settings</span>
-                        </div>
-                      </button>
-                    </div>
-
                     {/* Logout */}
                     <div className={`p-2 border-t ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
                       <button 

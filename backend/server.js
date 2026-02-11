@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose')
@@ -5,6 +7,8 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('./models/User');
 const authenticateToken = require('./middleware/auth');
+const { HfInference } = require('@huggingface/inference');
+const hf = new HfInference(process.env.HUGGINGFACE_API_TOKEN);
 const Note = require('./models/Notes');
 const Sticker = require('./models/Stickers');
 const app = express();
@@ -163,7 +167,7 @@ app.post('/api/notes', authenticateToken, async (req, res) => {
     try {
         const newNote = new Note({
             title: req.body.title,
-            description: req.body.description, 
+            content: req.body.content, 
             author_id: req.user.id,
             category: req.body.category,
         });
@@ -176,12 +180,104 @@ app.post('/api/notes', authenticateToken, async (req, res) => {
 });
 
 
+app.post('/api/notes/:id/generate-sticker', authenticateToken, async (req, res) => {
+    try {
+        // Fetch the note
+        const note = await Note.findById(req.params.id);
+        if (!note) {
+            return res.status(404).json({ error: 'Note not found' });
+        }
+
+        // Create the prompt
+        const prompt = `Create 3 fun, short sticker variations of this note. Each sticker should have a title (max 5 words) and content (max 15 words).
+
+Original Note:
+Title: ${note.title}
+Content: ${note.content}
+
+Return ONLY a JSON array in this exact format (no other text):
+[
+  {"title": "Sticker 1", "content": "Content 1"},
+  {"title": "Sticker 2", "content": "Content 2"},
+  {"title": "Sticker 3", "content": "Content 3"}
+]`;
+
+        // ✅ NEW: Use chatCompletion instead of textGeneration
+        const response = await hf.chatCompletion({
+            model: 'Qwen/Qwen2.5-Coder-32B-Instruct',
+            messages: [
+                {
+                    role: 'user',
+                    content: prompt
+                }
+            ],
+            max_tokens: 500,
+            temperature: 0.7
+        });
+
+        // Parse the AI response
+        let stickers;
+        try {
+            const aiText = response.choices[0].message.content;
+            const jsonMatch = aiText.match(/\[[\s\S]*\]/);
+            if (jsonMatch) {
+                stickers = JSON.parse(jsonMatch[0]);
+            } else {
+                throw new Error('No valid JSON found in the response');
+            }
+        } catch (parseError) {
+            console.error('AI Response:', response.choices[0].message.content);
+            return res.status(500).json({ 
+                error: 'AI generated invalid format',
+                aiResponse: response.choices[0].message.content 
+            });
+        }
+
+        // Save stickers to database
+        const createdStickers = await Sticker.insertMany(
+            stickers.map(s => ({
+                title: s.title,
+                content: s.content,
+                note_id: note._id,
+                author_id: req.user.id,
+                is_public: false
+            }))
+        );
+
+        // Send response
+        res.json({
+            success: true,
+            stickers: createdStickers
+        });
+
+    } catch (error) {
+        console.error('Error generating stickers:', error);
+        res.status(500).json({ 
+            error: 'Failed to generate stickers',
+            details: error.message 
+        });
+    }
+});
+
+
 app.get('/api/notes', authenticateToken, async (req, res) => {
     try {
         const notes = await Note.find({ author_id: req.user.id });
         res.json(notes);
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch notes' });
+    }
+});
+
+app.put('/api/notes/:id', authenticateToken, async (req, res) => {
+    try {
+        const updatedNote = await Note.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        if (!updatedNote) {
+            return res.status(404).json({ error: 'Note not found or unauthorized' });
+        }
+        res.json({message:'Note updated'});
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to update note' });
     }
 });
 

@@ -5,7 +5,6 @@ import { Trash2, X } from 'lucide-react';
 import ba from '../assets/sticker-bg.jpg';
 import { useTheme } from "../ThemeContext";
 import useThemeColors from "../useThemeColore";
-import { useSidebar } from "../sidebarcontext";
 import { useAuth } from "../AuthContex";
 
 
@@ -183,7 +182,7 @@ export default function Stickers() {
       </button>
 
 
-      <div className="w-257 h-110  m-2 overflow-y-scroll border-5 pt-2 scrollbar-none" style={{
+      <div className="w-290 h-127  m-2 overflow-y-scroll border-5 pt-2 scrollbar-none" style={{
         backgroundColor: isDark ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.6)',
         borderRadius: '15px',
         border: isDark ? '4px solid white' : '4px solid black',
